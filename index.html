@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ESOFA Harmony Drop</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #1a1a2e; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; touch-action: none; }
+        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        canvas { box-shadow: 0 0 20px rgba(0,0,0,0.5); border-radius: 4px; }
+        
+        /* UI Overlay */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; align-items: center; }
+        
+        #score-board { margin-top: 20px; font-size: 48px; font-weight: 800; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.3); pointer-events: auto; }
+        #best-score { font-size: 16px; color: #a0a0c0; margin-top: -5px; }
+        
+        /* The Donate Button - The most important part */
+        #donate-btn {
+            margin-top: 15px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #1a1a2e;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 18px;
+            border: 2px solid #fff;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+            transition: transform 0.1s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        #donate-btn:hover { transform: scale(1.05); }
+        #donate-btn:active { transform: scale(0.95); }
+
+        #game-over {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px; border-radius: 20px; text-align: center;
+            display: none; pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        h2 { margin: 0 0 10px 0; color: #333; }
+        button.restart {
+            background: #4ecdc4; border: none; padding: 10px 20px;
+            color: white; font-size: 18px; border-radius: 5px; cursor: pointer;
+        }
+        
+        /* Helper Text */
+        #helper { position: absolute; bottom: 20px; color: rgba(255,255,255,0.4); font-size: 12px; text-align: center; width: 100%; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="ui-layer">
+        <div id="score-board">0</div>
+        <div id="best-score">BEST: 0</div>
+        
+        <a id="donate-btn" href="https://www.sanangelogives.org/organization/emmanuelschooloffinearts" target="_blank">💝 Support ESOFA</a>
+        
+        <div id="game-over">
+            <h2>Track Full!</h2>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <button class="restart" onclick="location.reload()">Try Again</button>
+        </div>
+        
+        <div id="helper">Tap/Click to Drop • Merge Matching Colors</div>
+    </div>
+</div>
+
+<script>
+    // --- CONFIGURATION ---
+    const ENGINE = Matter.Engine,
+          RENDER = Matter.Render,
+          RUNNER = Matter.Runner,
+          BODIES = Matter.Bodies,
+          COMPOSITE = Matter.Composite,
+          EVENTS = Matter.Events,
+          BODY = Matter.Body;
+
+    // The Merge Hierarchy (Radius, Color, Name)
+    const ORBS = [
+        { r: 15, color: '#ff6b6b', name: 'Note' },       // 0: Red
+        { r: 25, color: '#feca57', name: 'Chord' },      // 1: Orange
+        { r: 35, color: '#ff9ff3', name: 'Rest' },       // 2: Pink
+        { r: 45, color: '#54a0ff', name: 'Flute' },      // 3: Blue
+        { r: 60, color: '#5f27cd', name: 'Violin' },     // 4: Purple
+        { r: 75, color: '#48dbfb', name: 'Trumpet' },    // 5: Cyan
+        { r: 90, color: '#1dd1a1', name: 'Guitar' },     // 6: Green
+        { r: 105, color: '#222f3e', name: 'Piano' },     // 7: Dark
+        { r: 125, color: '#ffd700', name: 'HARP' }       // 8: GOLD (Goal)
+    ];
+
+    // --- SETUP ---
+    const engine = ENGINE.create();
+    const world = engine.world;
+    
+    // Mobile-friendly Sizing
+    const isMobile = window.innerWidth < 600;
+    const width = isMobile ? window.innerWidth : 450;
+    const height = isMobile ? window.innerHeight : 800;
+    
+    const render = RENDER.create({
+        element: document.getElementById('game-container'),
+        engine: engine,
+        options: {
+            width: width,
+            height: height,
+            wireframes: false,
+            background: 'transparent'
+        }
+    });
+
+    // Boundaries (The "Cup")
+    const wallThick = 50;
+    const ground = BODIES.rectangle(width/2, height + wallThick/2 - 10, width, wallThick, { isStatic: true, render: { fillStyle: '#444' } });
+    const leftWall = BODIES.rectangle(0 - wallThick/2, height/2, wallThick, height, { isStatic: true, render: { fillStyle: '#444' } });
+    const rightWall = BODIES.rectangle(width + wallThick/2, height/2, wallThick, height, { isStatic: true, render: { fillStyle: '#444' } });
+    // Top "Lose" Line (Sensor)
+    const topSensor = BODIES.rectangle(width/2, 100, width, 2, { isStatic: true, isSensor: true, render: { visible: true, fillStyle: 'rgba(255,255,255,0.2)' } });
+
+    COMPOSITE.add(world, [ground, leftWall, rightWall, topSensor]);
+
+    // --- GAME STATE ---
+    let currentOrbIdx = 0;
+    let nextOrbIdx = 0;
+    let canDrop = true;
+    let score = 0;
+    let best = localStorage.getItem('esofa_best') || 0;
+    document.getElementById('best-score').innerText = "BEST: " + best;
+
+    // --- INPUT HANDLING ---
+    // We create a "phantom" orb at the top that follows the mouse
+    let phantomOrb = null;
+
+    function createPhantom() {
+        nextOrbIdx = Math.floor(Math.random() * 3); // Only give small items to start
+        updatePhantom(width / 2);
+    }
+
+    function updatePhantom(x) {
+        // Clamp x to stay inside walls
+        x = Math.max(ORBS[nextOrbIdx].r + 5, Math.min(x, width - ORBS[nextOrbIdx].r - 5));
+        
+        // Visual indicator only (not a physics body yet)
+        // We actually just use the renderer's context in the "afterRender" loop to draw the phantom
+        // but we need to store the X coordinate
+        phantomX = x;
+    }
+
+    let phantomX = width / 2;
+
+    render.canvas.addEventListener('mousemove', e => {
+        const rect = render.canvas.getBoundingClientRect();
+        updatePhantom(e.clientX - rect.left);
+    });
+    
+    render.canvas.addEventListener('touchmove', e => {
+        e.preventDefault(); // Prevent scrolling
+        const rect = render.canvas.getBoundingClientRect();
+        updatePhantom(e.touches[0].clientX - rect.left);
+    }, { passive: false });
+
+    // Drop Logic
+    const drop = () => {
+        if (!canDrop) return;
+        canDrop = false;
+        
+        const orbDef = ORBS[nextOrbIdx];
+        const orb = BODIES.circle(phantomX, 50, orbDef.r, {
+            restitution: 0.3, // Bounciness
+            render: { fillStyle: orbDef.color },
+            label: 'orb_' + nextOrbIdx
+        });
+        
+        COMPOSITE.add(world, orb);
+        
+        // Cooldown
+        setTimeout(() => {
+            canDrop = true;
+            nextOrbIdx = Math.floor(Math.random() * 3);
+        }, 600);
+    };
+
+    render.canvas.addEventListener('click', drop);
+    render.canvas.addEventListener('touchend', drop);
+
+    // --- MERGE LOGIC ---
+    EVENTS.on(engine, 'collisionStart', event => {
+        const pairs = event.pairs;
+        
+        for (let i = 0; i < pairs.length; i++) {
+            const bodyA = pairs[i].bodyA;
+            const bodyB = pairs[i].bodyB;
+
+            // Check if both are orbs
+            if (bodyA.label.includes('orb_') && bodyB.label.includes('orb_')) {
+                // Check if they are the SAME orb type
+                if (bodyA.label === bodyB.label) {
+                    // Extract index
+                    const idx = parseInt(bodyA.label.split('_')[1]);
+                    
+                    // If not the max level
+                    if (idx < ORBS.length - 1) {
+                        // Merge!
+                        // Remove old bodies
+                        COMPOSITE.remove(world, [bodyA, bodyB]);
+                        
+                        // Create new body at midpoint
+                        const midX = (bodyA.position.x + bodyB.position.x) / 2;
+                        const midY = (bodyA.position.y + bodyB.
