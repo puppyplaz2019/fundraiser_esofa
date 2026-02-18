@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ESOFA Harmony Drop: Symphony Edition</title>
+    <title>ESOFA Harmony Drop: V1.3 Grace Period</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #050508; overflow: hidden; font-family: 'Courier New', monospace; color: #00ffff; }
@@ -14,6 +14,11 @@
         #stats { top: 20px; left: 20px; width: 140px; text-align: center; }
         #score { font-size: 36px; font-weight: bold; color: #fff; text-shadow: 0 0 10px #00ffff; }
         
+        /* New Danger Meter */
+        #danger-zone { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 20px; background: rgba(0,0,0,0.8); border: 1px solid #333; font-weight: bold; letter-spacing: 2px; transition: 0.3s; }
+        .critical { color: #ff0000; border-color: #ff0000 !important; box-shadow: 0 0 15px #ff0000; animation: blink 0.5s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
         #leaderboard { top: 20px; right: 20px; width: 200px; }
         .entry { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; color: #fff; }
 
@@ -28,21 +33,23 @@
         }
         #donate-btn:hover { background: #00ffff; box-shadow: 0 0 20px #00ffff; }
 
-        canvas { border: 2px solid #00ffff; border-radius: 5px; background: #0a0a15; }
+        canvas { border: 2px solid #00ffff; border-radius: 5px; background: #0a0a15; cursor: crosshair; }
         
         #game-over-screen {
             position: absolute; display: none; flex-direction: column; align-items: center;
             background: rgba(0,0,0,0.95); padding: 40px; border: 2px solid #fff; border-radius: 10px; z-index: 200;
         }
-        input { background: #000; border: 1px solid #00ffff; color: #fff; padding: 10px; text-align: center; outline: none; }
-        button { background: #fff; border: none; padding: 10px 20px; margin-top: 15px; cursor: pointer; font-weight: bold; }
+        input { background: #000; border: 1px solid #00ffff; color: #fff; padding: 10px; text-align: center; outline: none; margin-bottom: 10px; }
+        button { background: #fff; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; width: 100%; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
+    <div id="danger-zone">OVERFLOW: 0/10</div>
+
     <div id="stats" class="panel">
-        <div>REVENUE SCORE</div>
+        <div>REVENUE</div>
         <div id="score">0</div>
         <div style="font-size: 11px; margin-top: 5px; color: #888;">TOP: <span id="best">0</span></div>
     </div>
@@ -57,13 +64,13 @@
         <div id="next-icon">🎵</div>
     </div>
 
-    <a id="donate-btn" href="https://www.sanangelogives.org/organization/emmanuelschooloffinearts" target="_blank">🥁 TIP ESOFA</a>
+    <a id="donate-btn" href="https://www.sanangelogives.org/organization/emmanuelschooloffinearts" target="_blank">💝 TIP ESOFA</a>
 
     <div id="game-over-screen">
-        <h1 style="color:#fff">CONCERT ENDED</h1>
-        <p>Enter your stage name:</p>
-        <input type="text" id="player-name" placeholder="MAESTRO" maxlength="10">
-        <button onclick="saveScore()">SUBMIT TO BOARD</button>
+        <h1 style="color:#fff">STAGE CLOGGED!</h1>
+        <p>Your concert was a hit!</p>
+        <input type="text" id="player-name" placeholder="YOUR NAME" maxlength="10">
+        <button onclick="saveScore()">SAVE TO LEADERBOARD</button>
     </div>
 </div>
 
@@ -72,7 +79,7 @@
     const engine = Engine.create();
     const width = 400; const height = 650;
 
-    // Audio Setup
+    // Audio Synth
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playNote(freq) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -80,12 +87,12 @@
         const gain = audioCtx.createGain();
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.8);
+        osc.stop(audioCtx.currentTime + 0.6);
     }
 
     const render = Render.create({
@@ -95,15 +102,15 @@
     });
 
     const ORBS = [
-        { r: 20, color: '#333', icon: '🎵', name: 'Note', pts: 2, freq: 261.63 }, // C4
-        { r: 30, color: '#444', icon: '🪈', name: 'Flute', pts: 4, freq: 293.66 }, // D4
-        { r: 40, color: '#555', icon: '🎺', name: 'Trumpet', pts: 8, freq: 329.63 }, // E4
-        { r: 50, color: '#666', icon: '🎷', name: 'Sax', pts: 16, freq: 349.23 },   // F4
-        { r: 65, color: '#777', icon: '🎻', name: 'Violin', pts: 32, freq: 392.00 }, // G4
-        { r: 80, color: '#888', icon: '🎸', name: 'Guitar', pts: 64, freq: 440.00 }, // A4
-        { r: 95, color: '#999', icon: '🥁', name: 'Drum', pts: 128, freq: 493.88 },  // B4
-        { r: 115, color: '#aaa', icon: '🎹', name: 'Piano', pts: 256, freq: 523.25 }, // C5
-        { r: 135, color: '#fff', icon: '🔱', name: 'HARP', pts: 512, freq: 587.33 }  // D5
+        { r: 20, color: '#111', icon: '🎵', pts: 2, freq: 261.63 },
+        { r: 30, color: '#222', icon: '🪈', pts: 4, freq: 293.66 },
+        { r: 40, color: '#333', icon: '🎺', pts: 8, freq: 329.63 },
+        { r: 50, color: '#444', icon: '🎷', pts: 16, freq: 349.23 },
+        { r: 65, color: '#555', icon: '🎻', pts: 32, freq: 392.00 },
+        { r: 80, color: '#666', icon: '🎸', pts: 64, freq: 440.00 },
+        { r: 95, color: '#777', icon: '🥁', pts: 128, freq: 493.88 },
+        { r: 115, color: '#888', icon: '🎹', pts: 256, freq: 523.25 },
+        { r: 135, color: '#fff', icon: '🔱', pts: 512, freq: 587.33 }
     ];
 
     const ground = Bodies.rectangle(width/2, height+25, width, 60, { isStatic: true, render: { fillStyle: '#00ffff' } });
@@ -120,16 +127,16 @@
         if(!canDrop) return;
         canDrop = false;
         const orb = Bodies.circle(x, 50, ORBS[nextIdx].r, {
-            restitution: 0.4,
+            restitution: 0.3,
             label: 'orb_' + nextIdx,
-            render: { fillStyle: 'transparent' } // We will draw the icons manually
+            render: { fillStyle: 'transparent' }
         });
         Composite.add(engine.world, orb);
-        playNote(ORBS[nextIdx].freq / 2); // Low drop sound
+        playNote(ORBS[nextIdx].freq / 2);
         
-        nextIdx = Math.floor(Math.random() * 3);
+        nextIdx = Math.floor(Math.random() * 4); // Added a bit more variety to drops
         document.getElementById('next-icon').innerText = ORBS[nextIdx].icon;
-        setTimeout(() => canDrop = true, 600);
+        setTimeout(() => canDrop = true, 500);
     }
 
     render.canvas.addEventListener('mousedown', (e) => {
@@ -158,7 +165,6 @@
         });
     });
 
-    // Custom Rendering for Icons
     Events.on(render, 'afterRender', () => {
         const context = render.context;
         engine.world.bodies.forEach(body => {
@@ -168,36 +174,54 @@
                 context.save();
                 context.translate(body.position.x, body.position.y);
                 context.rotate(body.angle);
-                
-                // Draw circle backing
                 context.beginPath();
                 context.arc(0, 0, info.r, 0, Math.PI * 2);
-                context.fillStyle = 'rgba(0, 255, 255, 0.1)';
+                context.fillStyle = 'rgba(0, 255, 255, 0.05)';
                 context.strokeStyle = '#00ffff';
-                context.lineWidth = 2;
+                context.lineWidth = 1;
                 context.fill();
                 context.stroke();
-
-                // Draw Icon
                 context.textAlign = "center";
                 context.textBaseline = "middle";
-                context.font = `${info.r * 1.2}px serif`;
+                context.font = `${info.r * 1.1}px serif`;
                 context.fillText(info.icon, 0, 0);
                 context.restore();
             }
         });
+        
+        // Visual Danger Line
+        context.beginPath();
+        context.moveTo(0, 110);
+        context.lineTo(width, 110);
+        context.strokeStyle = 'rgba(255,0,0,0.3)';
+        context.setLineDash([5, 5]);
+        context.stroke();
+        context.setLineDash([]);
     });
 
+    // --- UPDATED LOSE LOGIC (The 10-Ball Rule) ---
     setInterval(() => {
+        let count = 0;
         engine.world.bodies.forEach(b => {
-            if(b.position.y < 100 && !b.isStatic && b.id > 10) {
-                document.getElementById('game-over-screen').style.display = 'flex';
+            // If ball is above the danger line (y=110)
+            if(b.position.y < 110 && !b.isStatic && b.id > 10) {
+                count++;
             }
         });
-    }, 2000);
+        
+        const meter = document.getElementById('danger-zone');
+        meter.innerText = `OVERFLOW: ${count}/10`;
+        
+        if(count >= 7) meter.className = 'critical';
+        else meter.className = '';
+
+        if(count >= 10) {
+            document.getElementById('game-over-screen').style.display = 'flex';
+        }
+    }, 1000);
 
     function saveScore() {
-        const name = document.getElementById('player-name').value || "ANON";
+        const name = document.getElementById('player-name').value || "MAESTRO";
         leaders.push({name, score});
         localStorage.setItem('esofa_leaders', JSON.stringify(leaders.sort((a,b)=>b.score-a.score).slice(0, 10)));
         location.reload();
