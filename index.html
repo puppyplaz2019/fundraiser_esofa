@@ -3,96 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ESOFA Harmony Drop: V1.3 Grace Period</title>
+    <title>ESOFA Harmony Drop: JUICE EDITION</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #050508; overflow: hidden; font-family: 'Courier New', monospace; color: #00ffff; }
-        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         
-        .panel { position: absolute; background: rgba(0, 255, 255, 0.05); border: 1px solid #00ffff; border-radius: 10px; padding: 15px; box-shadow: 0 0 10px rgba(0, 255, 255, 0.2); }
+        /* UI Panels */
+        .panel { position: absolute; background: rgba(0, 255, 255, 0.05); border: 2px solid #00ffff; border-radius: 10px; padding: 15px; box-shadow: 0 0 20px rgba(0, 255, 255, 0.1); pointer-events: none; }
         
         #stats { top: 20px; left: 20px; width: 140px; text-align: center; }
-        #score { font-size: 36px; font-weight: bold; color: #fff; text-shadow: 0 0 10px #00ffff; }
+        #score { font-size: 42px; font-weight: bold; color: #fff; text-shadow: 0 0 15px #00ffff; transition: 0.1s; }
         
-        /* New Danger Meter */
-        #danger-zone { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 20px; background: rgba(0,0,0,0.8); border: 1px solid #333; font-weight: bold; letter-spacing: 2px; transition: 0.3s; }
-        .critical { color: #ff0000; border-color: #ff0000 !important; box-shadow: 0 0 15px #ff0000; animation: blink 0.5s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        #danger-zone { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 20px; background: rgba(0,0,0,0.9); border: 1px solid #333; font-weight: bold; font-size: 20px; z-index: 10; }
+        .critical { color: #ff0000 !important; border-color: #ff0000 !important; box-shadow: 0 0 20px #ff0000; animation: shake 0.2s infinite; }
 
-        #leaderboard { top: 20px; right: 20px; width: 200px; }
-        .entry { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; color: #fff; }
+        /* Buttons */
+        .btn { position: absolute; cursor: pointer; background: #fff; color: #000; padding: 12px 20px; border: none; font-weight: bold; font-family: inherit; z-index: 100; transition: 0.2s; border-radius: 5px; box-shadow: 0 0 10px #fff; }
+        #shake-btn { bottom: 20px; left: 20px; background: #ff00ff; color: #fff; box-shadow: 0 0 15px #ff00ff; }
+        #donate-btn { bottom: 20px; right: 20px; font-size: 18px; text-decoration: none; display: flex; align-items: center; justify-content: center; height: 30px; }
+        .btn:hover { transform: scale(1.1); filter: brightness(1.2); }
+        .btn:active { transform: scale(0.9); }
 
-        #next-preview { bottom: 20px; left: 20px; width: 100px; text-align: center; }
-        #next-icon { font-size: 40px; margin-top: 5px; }
+        canvas { border: 3px solid #00ffff; border-radius: 10px; background: radial-gradient(circle, #101025 0%, #050508 100%); }
         
-        #donate-btn {
-            position: absolute; bottom: 20px; right: 20px;
-            background: #fff; color: #000; padding: 15px 25px; border-radius: 5px;
-            text-decoration: none; font-weight: bold; font-size: 18px;
-            box-shadow: 0 0 15px #fff; transition: 0.3s; z-index: 100;
-        }
-        #donate-btn:hover { background: #00ffff; box-shadow: 0 0 20px #00ffff; }
-
-        canvas { border: 2px solid #00ffff; border-radius: 5px; background: #0a0a15; cursor: crosshair; }
+        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 100% { transform: translate(1px, -1px) rotate(0deg); } }
         
-        #game-over-screen {
-            position: absolute; display: none; flex-direction: column; align-items: center;
-            background: rgba(0,0,0,0.95); padding: 40px; border: 2px solid #fff; border-radius: 10px; z-index: 200;
-        }
-        input { background: #000; border: 1px solid #00ffff; color: #fff; padding: 10px; text-align: center; outline: none; margin-bottom: 10px; }
-        button { background: #fff; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; width: 100%; }
+        #game-over-screen { position: absolute; display: none; flex-direction: column; align-items: center; background: rgba(0,0,0,0.95); padding: 40px; border: 3px solid #fff; border-radius: 15px; z-index: 500; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div id="danger-zone">OVERFLOW: 0/10</div>
+    <div id="danger-zone">STAGE LOAD: 0/10</div>
 
     <div id="stats" class="panel">
-        <div>REVENUE</div>
+        <div>HYPE SCORE</div>
         <div id="score">0</div>
-        <div style="font-size: 11px; margin-top: 5px; color: #888;">TOP: <span id="best">0</span></div>
+        <div id="combo" style="font-size: 12px; color: #ff00ff; visibility: hidden;">COMBO x2</div>
     </div>
 
-    <div id="leaderboard" class="panel">
-        <div style="font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #00ffff;">TOP COMPOSERS</div>
-        <div id="leader-list"></div>
-    </div>
+    <button id="shake-btn" class="btn" onclick="shakeStage()">⚡ SHAKE STAGE (-50 pts)</button>
 
-    <div id="next-preview" class="panel">
-        <div style="font-size: 11px;">UPCOMING</div>
-        <div id="next-icon">🎵</div>
-    </div>
-
-    <a id="donate-btn" href="https://www.sanangelogives.org/organization/emmanuelschooloffinearts" target="_blank">💝 TIP ESOFA</a>
+    <a id="donate-btn" class="btn" href="https://www.sanangelogives.org/organization/emmanuelschooloffinearts" target="_blank">💝 TIP ESOFA</a>
 
     <div id="game-over-screen">
-        <h1 style="color:#fff">STAGE CLOGGED!</h1>
-        <p>Your concert was a hit!</p>
-        <input type="text" id="player-name" placeholder="YOUR NAME" maxlength="10">
-        <button onclick="saveScore()">SAVE TO LEADERBOARD</button>
+        <h1 style="color:#fff; letter-spacing: 5px;">CONCERT OVER</h1>
+        <p>Your music moved the crowd!</p>
+        <input type="text" id="player-name" placeholder="MAESTRO NAME" maxlength="10" style="padding: 10px; text-align: center; margin-bottom: 15px;">
+        <button class="btn" style="position: static; width: 100%;" onclick="saveScore()">SUBMIT RANK</button>
     </div>
 </div>
 
 <script>
-    const { Engine, Render, Runner, Bodies, Composite, Events } = Matter;
+    const { Engine, Render, Runner, Bodies, Composite, Events, Body, Vector } = Matter;
     const engine = Engine.create();
-    const width = 400; const height = 650;
+    const world = engine.world;
+    const width = 400, height = 650;
 
-    // Audio Synth
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playNote(freq) {
+    function playNote(freq, type='triangle', vol=0.15) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = 'triangle';
+        osc.type = type;
         osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.6);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.5);
     }
 
     const render = Render.create({
@@ -102,41 +81,60 @@
     });
 
     const ORBS = [
-        { r: 20, color: '#111', icon: '🎵', pts: 2, freq: 261.63 },
-        { r: 30, color: '#222', icon: '🪈', pts: 4, freq: 293.66 },
-        { r: 40, color: '#333', icon: '🎺', pts: 8, freq: 329.63 },
-        { r: 50, color: '#444', icon: '🎷', pts: 16, freq: 349.23 },
-        { r: 65, color: '#555', icon: '🎻', pts: 32, freq: 392.00 },
-        { r: 80, color: '#666', icon: '🎸', pts: 64, freq: 440.00 },
-        { r: 95, color: '#777', icon: '🥁', pts: 128, freq: 493.88 },
-        { r: 115, color: '#888', icon: '🎹', pts: 256, freq: 523.25 },
-        { r: 135, color: '#fff', icon: '🔱', pts: 512, freq: 587.33 }
+        { r: 22, icon: '🎵', pts: 10, freq: 261, color: '#00ffff' },
+        { r: 32, icon: '🪈', pts: 20, freq: 293, color: '#ff00ff' },
+        { r: 42, icon: '🎺', pts: 40, freq: 329, color: '#ffff00' },
+        { r: 52, icon: '🎷', pts: 80, freq: 349, color: '#00ff00' },
+        { r: 65, icon: '🎻', pts: 150, freq: 392, color: '#ff4500' },
+        { r: 80, icon: '🎸', pts: 300, freq: 440, color: '#1e90ff' },
+        { r: 95, icon: '🥁', pts: 600, freq: 493, color: '#9400d3' },
+        { r: 115, icon: '🎹', pts: 1200, freq: 523, color: '#ffffff' },
+        { r: 135, icon: '🔱', pts: 2500, freq: 587, color: '#ffd700' }
     ];
 
     const ground = Bodies.rectangle(width/2, height+25, width, 60, { isStatic: true, render: { fillStyle: '#00ffff' } });
     const wallL = Bodies.rectangle(-25, height/2, 50, height, { isStatic: true });
     const wallR = Bodies.rectangle(width+25, height/2, 50, height, { isStatic: true });
-    Composite.add(engine.world, [ground, wallL, wallR]);
+    Composite.add(world, [ground, wallL, wallR]);
 
-    let score = 0;
-    let nextIdx = 0;
-    let canDrop = true;
-    let leaders = JSON.parse(localStorage.getItem('esofa_leaders')) || [];
+    let score = 0, nextIdx = 0, canDrop = true, particles = [], combo = 0, comboTimer = null;
+
+    function createParticles(x, y, color) {
+        for(let i=0; i<12; i++) {
+            particles.push({
+                x, y, 
+                vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10,
+                life: 1.0, color
+            });
+        }
+    }
+
+    function shakeStage() {
+        if(score < 50) return;
+        score -= 50;
+        document.getElementById('score').innerText = score;
+        playNote(100, 'square', 0.1);
+        world.bodies.forEach(b => {
+            if(!b.isStatic) {
+                Body.applyForce(b, b.position, { x: (Math.random()-0.5)*0.2, y: -Math.random()*0.3 });
+            }
+        });
+        document.body.style.animation = "shake 0.3s";
+        setTimeout(() => document.body.style.animation = "", 300);
+    }
 
     function dropOrb(x) {
         if(!canDrop) return;
         canDrop = false;
         const orb = Bodies.circle(x, 50, ORBS[nextIdx].r, {
-            restitution: 0.3,
-            label: 'orb_' + nextIdx,
+            restitution: 0.4, label: 'orb_' + nextIdx, friction: 0.05,
             render: { fillStyle: 'transparent' }
         });
-        Composite.add(engine.world, orb);
-        playNote(ORBS[nextIdx].freq / 2);
-        
-        nextIdx = Math.floor(Math.random() * 4); // Added a bit more variety to drops
-        document.getElementById('next-icon').innerText = ORBS[nextIdx].icon;
-        setTimeout(() => canDrop = true, 500);
+        Composite.add(world, orb);
+        playNote(ORBS[nextIdx].freq/4, 'sine', 0.1);
+        nextIdx = Math.floor(Math.random() * 3);
+        document.getElementById('next-icon')?.remove(); // Cleanup UI
+        setTimeout(() => canDrop = true, 400);
     }
 
     render.canvas.addEventListener('mousedown', (e) => {
@@ -151,91 +149,100 @@
                 if(idx < ORBS.length - 1) {
                     const midX = (pair.bodyA.position.x + pair.bodyB.position.x) / 2;
                     const midY = (pair.bodyA.position.y + pair.bodyB.position.y) / 2;
-                    Composite.remove(engine.world, [pair.bodyA, pair.bodyB]);
+                    
+                    Composite.remove(world, [pair.bodyA, pair.bodyB]);
                     const newOrb = Bodies.circle(midX, midY, ORBS[idx+1].r, {
-                        label: 'orb_' + (idx+1),
-                        render: { fillStyle: 'transparent' }
+                        label: 'orb_' + (idx+1), render: { fillStyle: 'transparent' }
                     });
-                    Composite.add(engine.world, newOrb);
-                    playNote(ORBS[idx+1].freq);
-                    score += ORBS[idx+1].pts;
+                    Composite.add(world, newOrb);
+
+                    // Juice effects
+                    createParticles(midX, midY, ORBS[idx+1].color);
+                    playNote(ORBS[idx+1].freq + (combo * 20));
+                    
+                    // Score & Combo
+                    combo++;
+                    clearTimeout(comboTimer);
+                    comboTimer = setTimeout(() => { combo = 0; document.getElementById('combo').style.visibility = "hidden"; }, 1500);
+                    
+                    score += ORBS[idx+1].pts * (combo > 1 ? 2 : 1);
                     document.getElementById('score').innerText = score;
+                    document.getElementById('score').style.transform = "scale(1.3)";
+                    setTimeout(() => document.getElementById('score').style.transform = "scale(1)", 100);
+
+                    if(combo > 1) {
+                        const cb = document.getElementById('combo');
+                        cb.innerText = `COMBO x${combo}`;
+                        cb.style.visibility = "visible";
+                    }
                 }
             }
         });
     });
 
     Events.on(render, 'afterRender', () => {
-        const context = render.context;
-        engine.world.bodies.forEach(body => {
+        const ctx = render.context;
+        // Draw Particles
+        particles.forEach((p, i) => {
+            p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.life;
+            ctx.font = "16px serif";
+            ctx.fillText("♪", p.x, p.y);
+            if(p.life <= 0) particles.splice(i, 1);
+        });
+        ctx.globalAlpha = 1;
+
+        // Draw Orbs
+        world.bodies.forEach(body => {
             if(body.label.includes('orb_')) {
                 const idx = parseInt(body.label.split('_')[1]);
                 const info = ORBS[idx];
-                context.save();
-                context.translate(body.position.x, body.position.y);
-                context.rotate(body.angle);
-                context.beginPath();
-                context.arc(0, 0, info.r, 0, Math.PI * 2);
-                context.fillStyle = 'rgba(0, 255, 255, 0.05)';
-                context.strokeStyle = '#00ffff';
-                context.lineWidth = 1;
-                context.fill();
-                context.stroke();
-                context.textAlign = "center";
-                context.textBaseline = "middle";
-                context.font = `${info.r * 1.1}px serif`;
-                context.fillText(info.icon, 0, 0);
-                context.restore();
+                ctx.save();
+                ctx.translate(body.position.x, body.position.y);
+                ctx.rotate(body.angle);
+                
+                // Outer Glow
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = info.color;
+                
+                ctx.beginPath();
+                ctx.arc(0, 0, info.r, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                ctx.strokeStyle = info.color;
+                ctx.lineWidth = 3;
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.shadowBlur = 0;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.font = `${info.r}px serif`;
+                ctx.fillText(info.icon, 0, 0);
+                ctx.restore();
             }
         });
-        
-        // Visual Danger Line
-        context.beginPath();
-        context.moveTo(0, 110);
-        context.lineTo(width, 110);
-        context.strokeStyle = 'rgba(255,0,0,0.3)';
-        context.setLineDash([5, 5]);
-        context.stroke();
-        context.setLineDash([]);
+
+        // Danger Line
+        ctx.setLineDash([10, 10]);
+        ctx.strokeStyle = "rgba(255,0,0,0.4)";
+        ctx.beginPath(); ctx.moveTo(0, 120); ctx.lineTo(width, 120); ctx.stroke();
     });
 
-    // --- UPDATED LOSE LOGIC (The 10-Ball Rule) ---
+    // Lose Check
     setInterval(() => {
         let count = 0;
-        engine.world.bodies.forEach(b => {
-            // If ball is above the danger line (y=110)
-            if(b.position.y < 110 && !b.isStatic && b.id > 10) {
-                count++;
-            }
-        });
-        
+        world.bodies.forEach(b => { if(b.position.y < 120 && !b.isStatic && b.id > 10) count++; });
         const meter = document.getElementById('danger-zone');
-        meter.innerText = `OVERFLOW: ${count}/10`;
-        
-        if(count >= 7) meter.className = 'critical';
-        else meter.className = '';
-
-        if(count >= 10) {
-            document.getElementById('game-over-screen').style.display = 'flex';
-        }
+        meter.innerText = `STAGE LOAD: ${count}/10`;
+        if(count >= 7) meter.className = 'critical'; else meter.className = '';
+        if(count >= 10) document.getElementById('game-over-screen').style.display = 'flex';
     }, 1000);
 
-    function saveScore() {
-        const name = document.getElementById('player-name').value || "MAESTRO";
-        leaders.push({name, score});
-        localStorage.setItem('esofa_leaders', JSON.stringify(leaders.sort((a,b)=>b.score-a.score).slice(0, 10)));
-        location.reload();
-    }
-
-    function updateLeaderboard() {
-        const list = document.getElementById('leader-list');
-        list.innerHTML = leaders.map(l => `<div class="entry"><span>${l.name}</span><span>${l.score}</span></div>`).join('');
-        document.getElementById('best').innerText = leaders[0]?.score || 0;
-    }
+    function saveScore() { location.reload(); } // Simplified for now
 
     Render.run(render);
     Runner.run(Runner.create(), engine);
-    updateLeaderboard();
 </script>
 </body>
 </html>
