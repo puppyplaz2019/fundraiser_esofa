@@ -3,71 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ESOFA Harmony Drop: JUICE EDITION</title>
+    <title>ESOFA Harmony Drop: V1.5 Spotlight</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #050508; overflow: hidden; font-family: 'Courier New', monospace; color: #00ffff; }
         #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         
-        /* UI Panels */
-        .panel { position: absolute; background: rgba(0, 255, 255, 0.05); border: 2px solid #00ffff; border-radius: 10px; padding: 15px; box-shadow: 0 0 20px rgba(0, 255, 255, 0.1); pointer-events: none; }
+        .panel { position: absolute; background: rgba(0, 255, 255, 0.05); border: 2px solid #00ffff; border-radius: 10px; padding: 15px; box-shadow: 0 0 20px rgba(0, 255, 255, 0.1); pointer-events: none; z-index: 10; }
         
         #stats { top: 20px; left: 20px; width: 140px; text-align: center; }
-        #score { font-size: 42px; font-weight: bold; color: #fff; text-shadow: 0 0 15px #00ffff; transition: 0.1s; }
+        #score { font-size: 42px; font-weight: bold; color: #fff; text-shadow: 0 0 15px #00ffff; }
         
-        #danger-zone { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 20px; background: rgba(0,0,0,0.9); border: 1px solid #333; font-weight: bold; font-size: 20px; z-index: 10; }
+        #next-preview { bottom: 20px; left: 20px; width: 100px; text-align: center; border-color: #ff00ff; box-shadow: 0 0 15px #ff00ff; }
+        #next-icon { font-size: 45px; margin-top: 5px; filter: drop-shadow(0 0 10px #ff00ff); }
+
+        #danger-zone { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 20px; background: rgba(0,0,0,0.9); border: 1px solid #333; font-weight: bold; font-size: 18px; z-index: 20; }
         .critical { color: #ff0000 !important; border-color: #ff0000 !important; box-shadow: 0 0 20px #ff0000; animation: shake 0.2s infinite; }
 
-        /* Buttons */
         .btn { position: absolute; cursor: pointer; background: #fff; color: #000; padding: 12px 20px; border: none; font-weight: bold; font-family: inherit; z-index: 100; transition: 0.2s; border-radius: 5px; box-shadow: 0 0 10px #fff; }
-        #shake-btn { bottom: 20px; left: 20px; background: #ff00ff; color: #fff; box-shadow: 0 0 15px #ff00ff; }
-        #donate-btn { bottom: 20px; right: 20px; font-size: 18px; text-decoration: none; display: flex; align-items: center; justify-content: center; height: 30px; }
-        .btn:hover { transform: scale(1.1); filter: brightness(1.2); }
-        .btn:active { transform: scale(0.9); }
-
-        canvas { border: 3px solid #00ffff; border-radius: 10px; background: radial-gradient(circle, #101025 0%, #050508 100%); }
+        #shake-btn { bottom: 20px; left: 160px; background: #ff00ff; color: #fff; box-shadow: 0 0 15px #ff00ff; }
+        #donate-btn { bottom: 20px; right: 20px; font-size: 18px; text-decoration: none; display: flex; align-items: center; }
         
-        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 100% { transform: translate(1px, -1px) rotate(0deg); } }
+        canvas { border: 3px solid #00ffff; border-radius: 10px; background: radial-gradient(circle, #0e0e1a 0%, #050508 100%); cursor: crosshair; }
         
         #game-over-screen { position: absolute; display: none; flex-direction: column; align-items: center; background: rgba(0,0,0,0.95); padding: 40px; border: 3px solid #fff; border-radius: 15px; z-index: 500; }
+        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1.5px, -1px) rotate(-1deg); } 100% { transform: translate(1px, -1px) rotate(0deg); } }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div id="danger-zone">STAGE LOAD: 0/10</div>
+    <div id="danger-zone">STAGE: 0/10</div>
 
     <div id="stats" class="panel">
         <div>HYPE SCORE</div>
         <div id="score">0</div>
-        <div id="combo" style="font-size: 12px; color: #ff00ff; visibility: hidden;">COMBO x2</div>
+        <div id="combo" style="font-size: 14px; color: #ff00ff; visibility: hidden;">COMBO x2</div>
     </div>
 
-    <button id="shake-btn" class="btn" onclick="shakeStage()">⚡ SHAKE STAGE (-50 pts)</button>
+    <div id="next-preview" class="panel">
+        <div style="font-size: 10px;">UPCOMING</div>
+        <div id="next-icon">🪈</div>
+    </div>
 
+    <button id="shake-btn" class="btn" onclick="shakeStage()">⚡ SHAKE STAGE</button>
     <a id="donate-btn" class="btn" href="https://www.sanangelogives.org/organization/emmanuelschooloffinearts" target="_blank">💝 TIP ESOFA</a>
 
     <div id="game-over-screen">
-        <h1 style="color:#fff; letter-spacing: 5px;">CONCERT OVER</h1>
-        <p>Your music moved the crowd!</p>
-        <input type="text" id="player-name" placeholder="MAESTRO NAME" maxlength="10" style="padding: 10px; text-align: center; margin-bottom: 15px;">
-        <button class="btn" style="position: static; width: 100%;" onclick="saveScore()">SUBMIT RANK</button>
+        <h1 style="color:#fff;">CONCERT OVER</h1>
+        <p>Save your score to the local board:</p>
+        <input type="text" id="player-name" placeholder="NAME" maxlength="10" style="padding: 10px; text-align: center; margin-bottom: 10px; background: #000; color: #fff; border: 1px solid #00ffff;">
+        <button class="btn" style="position: static; width: 100%;" onclick="saveScore()">SUBMIT</button>
     </div>
 </div>
 
 <script>
-    const { Engine, Render, Runner, Bodies, Composite, Events, Body, Vector } = Matter;
+    const { Engine, Render, Runner, Bodies, Composite, Events, Body } = Matter;
     const engine = Engine.create();
-    const world = engine.world;
     const width = 400, height = 650;
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playNote(freq, type='triangle', vol=0.15) {
+    function playNote(freq, type='triangle', vol=0.1) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
         gain.gain.setValueAtTime(vol, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
         osc.connect(gain); gain.connect(audioCtx.destination);
@@ -95,52 +95,41 @@
     const ground = Bodies.rectangle(width/2, height+25, width, 60, { isStatic: true, render: { fillStyle: '#00ffff' } });
     const wallL = Bodies.rectangle(-25, height/2, 50, height, { isStatic: true });
     const wallR = Bodies.rectangle(width+25, height/2, 50, height, { isStatic: true });
-    Composite.add(world, [ground, wallL, wallR]);
+    Composite.add(engine.world, [ground, wallL, wallR]);
 
-    let score = 0, nextIdx = 0, canDrop = true, particles = [], combo = 0, comboTimer = null;
+    let score = 0, currentIdx = 0, nextIdx = Math.floor(Math.random()*3), canDrop = true, mouseX = width/2;
+    let particles = [], combo = 0, comboTimer = null;
 
-    function createParticles(x, y, color) {
-        for(let i=0; i<12; i++) {
-            particles.push({
-                x, y, 
-                vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10,
-                life: 1.0, color
-            });
-        }
+    function dropOrb() {
+        if(!canDrop) return;
+        canDrop = false;
+        const orb = Bodies.circle(mouseX, 50, ORBS[currentIdx].r, {
+            restitution: 0.4, label: 'orb_' + currentIdx, render: { fillStyle: 'transparent' }
+        });
+        Composite.add(engine.world, orb);
+        playNote(ORBS[currentIdx].freq/4, 'sine', 0.1);
+        
+        currentIdx = nextIdx;
+        nextIdx = Math.floor(Math.random() * 3);
+        document.getElementById('next-icon').innerText = ORBS[nextIdx].icon;
+        setTimeout(() => canDrop = true, 500);
     }
 
     function shakeStage() {
         if(score < 50) return;
         score -= 50;
         document.getElementById('score').innerText = score;
-        playNote(100, 'square', 0.1);
-        world.bodies.forEach(b => {
-            if(!b.isStatic) {
-                Body.applyForce(b, b.position, { x: (Math.random()-0.5)*0.2, y: -Math.random()*0.3 });
-            }
+        engine.world.bodies.forEach(b => {
+            if(!b.isStatic) Body.applyForce(b, b.position, { x: (Math.random()-0.5)*0.25, y: -Math.random()*0.35 });
         });
-        document.body.style.animation = "shake 0.3s";
-        setTimeout(() => document.body.style.animation = "", 300);
     }
 
-    function dropOrb(x) {
-        if(!canDrop) return;
-        canDrop = false;
-        const orb = Bodies.circle(x, 50, ORBS[nextIdx].r, {
-            restitution: 0.4, label: 'orb_' + nextIdx, friction: 0.05,
-            render: { fillStyle: 'transparent' }
-        });
-        Composite.add(world, orb);
-        playNote(ORBS[nextIdx].freq/4, 'sine', 0.1);
-        nextIdx = Math.floor(Math.random() * 3);
-        document.getElementById('next-icon')?.remove(); // Cleanup UI
-        setTimeout(() => canDrop = true, 400);
-    }
-
-    render.canvas.addEventListener('mousedown', (e) => {
+    render.canvas.addEventListener('mousemove', (e) => {
         const rect = render.canvas.getBoundingClientRect();
-        dropOrb(e.clientX - rect.left);
+        mouseX = Math.max(ORBS[currentIdx].r, Math.min(width - ORBS[currentIdx].r, e.clientX - rect.left));
     });
+
+    render.canvas.addEventListener('mousedown', dropOrb);
 
     Events.on(engine, 'collisionStart', (event) => {
         event.pairs.forEach(pair => {
@@ -149,27 +138,19 @@
                 if(idx < ORBS.length - 1) {
                     const midX = (pair.bodyA.position.x + pair.bodyB.position.x) / 2;
                     const midY = (pair.bodyA.position.y + pair.bodyB.position.y) / 2;
-                    
-                    Composite.remove(world, [pair.bodyA, pair.bodyB]);
+                    Composite.remove(engine.world, [pair.bodyA, pair.bodyB]);
                     const newOrb = Bodies.circle(midX, midY, ORBS[idx+1].r, {
                         label: 'orb_' + (idx+1), render: { fillStyle: 'transparent' }
                     });
-                    Composite.add(world, newOrb);
-
-                    // Juice effects
-                    createParticles(midX, midY, ORBS[idx+1].color);
+                    Composite.add(engine.world, newOrb);
                     playNote(ORBS[idx+1].freq + (combo * 20));
                     
-                    // Score & Combo
                     combo++;
                     clearTimeout(comboTimer);
                     comboTimer = setTimeout(() => { combo = 0; document.getElementById('combo').style.visibility = "hidden"; }, 1500);
                     
                     score += ORBS[idx+1].pts * (combo > 1 ? 2 : 1);
                     document.getElementById('score').innerText = score;
-                    document.getElementById('score').style.transform = "scale(1.3)";
-                    setTimeout(() => document.getElementById('score').style.transform = "scale(1)", 100);
-
                     if(combo > 1) {
                         const cb = document.getElementById('combo');
                         cb.innerText = `COMBO x${combo}`;
@@ -182,64 +163,43 @@
 
     Events.on(render, 'afterRender', () => {
         const ctx = render.context;
-        // Draw Particles
-        particles.forEach((p, i) => {
-            p.x += p.vx; p.y += p.vy; p.life -= 0.02;
-            ctx.fillStyle = p.color;
-            ctx.globalAlpha = p.life;
-            ctx.font = "16px serif";
-            ctx.fillText("♪", p.x, p.y);
-            if(p.life <= 0) particles.splice(i, 1);
-        });
-        ctx.globalAlpha = 1;
+        // Draw Ghost Guide
+        if(canDrop) {
+            ctx.save(); ctx.globalAlpha = 0.3;
+            ctx.beginPath(); ctx.arc(mouseX, 50, ORBS[currentIdx].r, 0, Math.PI*2);
+            ctx.strokeStyle = ORBS[currentIdx].color; ctx.stroke();
+            ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.font = `${ORBS[currentIdx].r}px serif`;
+            ctx.fillText(ORBS[currentIdx].icon, mouseX, 50);
+            ctx.restore();
+        }
 
-        // Draw Orbs
-        world.bodies.forEach(body => {
+        engine.world.bodies.forEach(body => {
             if(body.label.includes('orb_')) {
                 const idx = parseInt(body.label.split('_')[1]);
                 const info = ORBS[idx];
-                ctx.save();
-                ctx.translate(body.position.x, body.position.y);
-                ctx.rotate(body.angle);
-                
-                // Outer Glow
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = info.color;
-                
-                ctx.beginPath();
-                ctx.arc(0, 0, info.r, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(0,0,0,0.8)';
-                ctx.strokeStyle = info.color;
-                ctx.lineWidth = 3;
-                ctx.fill();
-                ctx.stroke();
-
-                ctx.shadowBlur = 0;
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.font = `${info.r}px serif`;
-                ctx.fillText(info.icon, 0, 0);
+                ctx.save(); ctx.translate(body.position.x, body.position.y); ctx.rotate(body.angle);
+                ctx.shadowBlur = 10; ctx.shadowColor = info.color;
+                ctx.beginPath(); ctx.arc(0, 0, info.r, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0,0,0,0.8)'; ctx.strokeStyle = info.color; ctx.lineWidth = 2;
+                ctx.fill(); ctx.stroke();
+                ctx.shadowBlur = 0; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                ctx.font = `${info.r}px serif`; ctx.fillText(info.icon, 0, 0);
                 ctx.restore();
             }
         });
-
-        // Danger Line
-        ctx.setLineDash([10, 10]);
-        ctx.strokeStyle = "rgba(255,0,0,0.4)";
-        ctx.beginPath(); ctx.moveTo(0, 120); ctx.lineTo(width, 120); ctx.stroke();
     });
 
-    // Lose Check
     setInterval(() => {
         let count = 0;
-        world.bodies.forEach(b => { if(b.position.y < 120 && !b.isStatic && b.id > 10) count++; });
+        engine.world.bodies.forEach(b => { if(b.position.y < 120 && !b.isStatic && b.id > 10) count++; });
         const meter = document.getElementById('danger-zone');
         meter.innerText = `STAGE LOAD: ${count}/10`;
         if(count >= 7) meter.className = 'critical'; else meter.className = '';
         if(count >= 10) document.getElementById('game-over-screen').style.display = 'flex';
     }, 1000);
 
-    function saveScore() { location.reload(); } // Simplified for now
+    function saveScore() { location.reload(); }
 
     Render.run(render);
     Runner.run(Runner.create(), engine);
