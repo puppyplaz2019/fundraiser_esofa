@@ -3,45 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ESOFA Harmony Drop: V1.11 Fixed</title>
+    <title>ESOFA Harmony: Gallery Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
-        body { margin: 0; padding: 0; background: #050508; overflow: hidden; font-family: 'Courier New', monospace; color: #00ffff; }
+        /* Modern Gallery Aesthetic */
+        body { margin: 0; padding: 0; background: #1a1a1a; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: #fdf5e6; }
         #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
-        .panel { position: absolute; background: rgba(0, 255, 255, 0.1); border: 2px solid #00ffff; border-radius: 10px; padding: 15px; z-index: 10; pointer-events: none; }
-        #stats { top: 20px; left: 20px; }
-        #next-preview { bottom: 20px; left: 20px; border-color: #ff00ff; }
         
+        .panel { position: absolute; background: rgba(255, 255, 255, 0.05); border: 1px solid #d4af37; border-radius: 4px; padding: 12px; z-index: 10; pointer-events: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        #stats { top: 20px; left: 20px; min-width: 120px; text-align: center; }
+        #score { font-size: 28px; color: #d4af37; font-weight: bold; }
+        
+        #next-preview { bottom: 20px; left: 20px; text-align: center; }
+        #next-icon { font-size: 40px; display: block; margin-top: 5px; }
+
+        /* Support Menu */
         #donation-modal {
             position: absolute; display: none; flex-direction: column; align-items: center;
-            background: rgba(0,0,0,0.95); padding: 30px; border: 3px solid #ff00ff; border-radius: 15px;
-            z-index: 1000; width: 320px; text-align: center;
+            background: #252525; padding: 30px; border: 2px solid #d4af37; border-radius: 8px;
+            z-index: 1000; width: 340px; text-align: center; box-shadow: 0 0 40px rgba(0,0,0,0.8);
         }
-        .tip-link {
-            width: 100%; padding: 12px; margin: 5px 0; background: #ff0000; 
-            color: #fff; text-decoration: none; text-align: center; 
-            font-weight: bold; border-radius: 5px; display: block;
+        .hub-link {
+            width: 100%; padding: 14px; margin: 8px 0; font-weight: bold; text-decoration: none; border-radius: 4px; display: block; transition: 0.3s;
         }
-        .btn { position: absolute; cursor: pointer; background: #ff00ff; color: #fff; padding: 12px 20px; border: none; font-weight: bold; border-radius: 5px; z-index: 100; }
-        #tip-menu-btn { bottom: 20px; right: 20px; }
-        canvas { border: 3px solid #00ffff; background: #0a0a15; }
+        .yt-btn { background: #c4302b; color: white; }
+        .tip-btn { background: #d4af37; color: #1a1a1a; }
+        .hub-link:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        .btn { position: absolute; cursor: pointer; padding: 12px 24px; border: none; font-weight: bold; border-radius: 4px; z-index: 100; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px; }
+        #menu-trigger { bottom: 20px; right: 20px; background: #d4af37; color: #1a1a1a; }
+        
+        canvas { border: 2px solid #333; border-bottom: 5px solid #d4af37; background: #141414; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div id="stats" class="panel">SCORE: <span id="score">0</span></div>
-    <div id="next-preview" class="panel">NEXT: <span id="next-icon" style="font-size:30px;">🪈</span></div>
-
-    <div id="donation-modal">
-        <h2 style="color:#ff00ff;">COMMUNITY HUB</h2>
-        <a class="tip-link" href="https://www.youtube.com/@SancoOutdoors" target="_blank">🎬 SUB TO SANCO OUTDOORS</a>
-        <br>
-        <a class="tip-link" style="background:#00ffff; color:#000;" href="https://www.sanangelogives.org/organization/emmanuelschooloffinearts" target="_blank">🎻 TIP ESOFA</a>
-        <div style="margin-top:20px; color:#666; cursor:pointer;" onclick="toggleModal(false)">[ CLOSE ]</div>
+    <div id="stats" class="panel">
+        <div style="font-size: 10px; letter-spacing: 2px;">SCORE</div>
+        <div id="score">0</div>
     </div>
 
-    <button id="tip-menu-btn" class="btn" onclick="toggleModal(true)">SUPPORT</button>
+    <div id="next-preview" class="panel">
+        <div style="font-size: 10px; letter-spacing: 2px;">UPCOMING</div>
+        <span id="next-icon">🪈</span>
+    </div>
+
+    <div id="donation-modal">
+        <h3 style="color:#d4af37; margin-top:0; letter-spacing: 3px;">ESOFA COMMUNITY</h3>
+        <a class="hub-link yt-btn" href="https://www.youtube.com/@SancoOutdoors" target="_blank">SUBSCRIBE TO SANCO OUTDOORS</a>
+        <a class="hub-link tip-btn" href="https://www.sanangelogives.org/organization/emmanuelschooloffinearts" target="_blank">TIP THE SCHOOL</a>
+        <div style="margin-top:20px; color:#888; cursor:pointer; font-size: 11px;" onclick="toggleModal(false)">[ RETURN TO GALLERY ]</div>
+    </div>
+
+    <button id="menu-trigger" class="btn" onclick="toggleModal(true)">Support Hub</button>
 </div>
 
 <script>
@@ -55,46 +70,44 @@
         options: { width, height, wireframes: false, background: 'transparent' }
     });
 
+    // Gallery Color Palette for Orbs
     const ORBS = [
-        { r: 25, icon: '🎵', pts: 10 },
-        { r: 35, icon: '🪈', pts: 20 },
-        { r: 45, icon: '🎺', pts: 40 },
-        { r: 55, icon: '🎷', pts: 80 },
-        { r: 70, icon: '🎻', pts: 150 }
+        { r: 25, icon: '🎵', pts: 10, color: '#f5deb3' }, // Wheat
+        { r: 35, icon: '🪈', pts: 20, color: '#98fb98' }, // PaleGreen
+        { r: 45, icon: '🎺', pts: 40, color: '#ffb347' }, // Pastel Orange
+        { r: 55, icon: '🎷', pts: 80, color: '#ff6961' }, // Pastel Red
+        { r: 70, icon: '🎻', pts: 150, color: '#b19cd9' }  // Pastel Purple
     ];
 
-    // Walls
-    const ground = Bodies.rectangle(200, 610, 400, 60, { isStatic: true, render: { fillStyle: '#111' } });
+    const ground = Bodies.rectangle(200, 610, 400, 60, { isStatic: true });
     const leftWall = Bodies.rectangle(-10, 300, 20, 600, { isStatic: true });
     const rightWall = Bodies.rectangle(410, 300, 20, 600, { isStatic: true });
     Composite.add(engine.world, [ground, leftWall, rightWall]);
 
     let score = 0, currentIdx = 0, nextIdx = 1, canDrop = true, mouseX = 200, modalOpen = false;
 
-    function toggleModal(show) { modalOpen = show; document.getElementById('donation-modal').style.display = show ? 'flex' : 'none'; }
+    function toggleModal(show) { 
+        modalOpen = show; 
+        document.getElementById('donation-modal').style.display = show ? 'flex' : 'none'; 
+    }
 
     function drop() {
         if(!canDrop || modalOpen) return;
         canDrop = false;
-        
         const ball = Bodies.circle(mouseX, 50, ORBS[currentIdx].r, {
             restitution: 0.4,
-            friction: 0.1,
-            plugin: { icon: ORBS[currentIdx].icon, r: ORBS[currentIdx].r, idx: currentIdx }
+            plugin: { icon: ORBS[currentIdx].icon, r: ORBS[currentIdx].r, idx: currentIdx, color: ORBS[currentIdx].color }
         });
-        
         Composite.add(engine.world, ball);
-        
         currentIdx = nextIdx;
         nextIdx = Math.floor(Math.random() * 3);
         document.getElementById('next-icon').innerText = ORBS[nextIdx].icon;
-        
         setTimeout(() => { canDrop = true; }, 500);
     }
 
     render.canvas.addEventListener('mousemove', (e) => {
         const rect = render.canvas.getBoundingClientRect();
-        mouseX = e.clientX - rect.left;
+        mouseX = Math.max(25, Math.min(375, e.clientX - rect.left));
     });
 
     render.canvas.addEventListener('mousedown', drop);
@@ -102,8 +115,7 @@
 
     Events.on(engine, 'collisionStart', (event) => {
         event.pairs.forEach(pair => {
-            const a = pair.bodyA;
-            const b = pair.bodyB;
+            const a = pair.bodyA; const b = pair.bodyB;
             if(a.plugin.idx !== undefined && a.plugin.idx === b.plugin.idx) {
                 const idx = a.plugin.idx;
                 if(idx < ORBS.length - 1) {
@@ -111,7 +123,7 @@
                     const newY = (a.position.y + b.position.y) / 2;
                     Composite.remove(engine.world, [a, b]);
                     const upgraded = Bodies.circle(newX, newY, ORBS[idx+1].r, {
-                        plugin: { icon: ORBS[idx+1].icon, r: ORBS[idx+1].r, idx: idx+1 }
+                        plugin: { icon: ORBS[idx+1].icon, r: ORBS[idx+1].r, idx: idx+1, color: ORBS[idx+1].color }
                     });
                     Composite.add(engine.world, upgraded);
                     score += ORBS[idx+1].pts;
@@ -123,23 +135,36 @@
 
     Events.on(render, 'afterRender', () => {
         const ctx = render.context;
-        // Ghost
+        // Aiming Guide
         if(canDrop && !modalOpen) {
-            ctx.globalAlpha = 0.5;
-            ctx.font = "40px serif";
-            ctx.textAlign = "center";
-            ctx.fillText(ORBS[currentIdx].icon, mouseX, 50);
-            ctx.globalAlpha = 1;
+            ctx.beginPath();
+            ctx.setLineDash([5, 5]);
+            ctx.moveTo(mouseX, 50); ctx.lineTo(mouseX, height);
+            ctx.strokeStyle = "rgba(212, 175, 55, 0.2)";
+            ctx.stroke();
+            ctx.setLineDash([]);
         }
-        // Bodies
+        // Draw Orbs
         engine.world.bodies.forEach(body => {
             if(body.plugin.icon) {
                 ctx.save();
                 ctx.translate(body.position.x, body.position.y);
                 ctx.rotate(body.angle);
-                ctx.font = `${body.plugin.r * 1.5}px serif`;
+                
+                // Draw Circle Background
+                ctx.beginPath();
+                ctx.arc(0, 0, body.plugin.r, 0, Math.PI*2);
+                ctx.fillStyle = body.plugin.color;
+                ctx.fill();
+                ctx.strokeStyle = "rgba(0,0,0,0.2)";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Draw Icon
+                ctx.font = `${body.plugin.r}px serif`;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
+                ctx.fillStyle = "#1a1a1a";
                 ctx.fillText(body.plugin.icon, 0, 0);
                 ctx.restore();
             }
