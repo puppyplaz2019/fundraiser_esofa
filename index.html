@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ESOFA Harmony Drop: V1.9</title>
+    <title>ESOFA Harmony Drop: V1.10</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #050508; overflow: hidden; font-family: 'Courier New', monospace; color: #00ffff; }
@@ -13,20 +13,19 @@
         #score { font-size: 42px; font-weight: bold; color: #fff; }
         #next-preview { bottom: 20px; left: 20px; width: 100px; text-align: center; border-color: #ff00ff; }
         
-        /* Modal Style */
         #donation-modal {
             position: absolute; display: none; flex-direction: column; align-items: center;
             background: rgba(0,0,0,0.95); padding: 30px; border: 3px solid #ff00ff; border-radius: 15px;
-            z-index: 1000; width: 320px;
+            z-index: 1000; width: 320px; text-align: center;
         }
         .tip-link {
             width: 100%; padding: 12px; margin: 5px 0; background: transparent; 
             border: 1px solid #00ffff; color: #00ffff; text-decoration: none; 
-            text-align: center; font-weight: bold; border-radius: 5px; font-size: 13px;
+            text-align: center; font-weight: bold; border-radius: 5px; font-size: 13px; display: block;
         }
-        .yt-link { border-color: #ff0000; color: #ff0000; background: rgba(255,0,0,0.1); }
+        .yt-link { border-color: #ff0000; color: #fff; background: #ff0000; }
         
-        .btn { position: absolute; cursor: pointer; background: #fff; color: #000; padding: 12px 20px; border: none; font-weight: bold; border-radius: 5px; z-index: 100; }
+        .btn { position: absolute; cursor: pointer; background: #fff; color: #000; padding: 12px 20px; border: none; font-weight: bold; border-radius: 5px; z-index: 100; transition: 0.2s; }
         #tip-menu-btn { bottom: 20px; right: 20px; background: #ff00ff; color: #fff; }
         canvas { border: 3px solid #00ffff; border-radius: 10px; background: #050508; cursor: crosshair; }
     </style>
@@ -46,12 +45,12 @@
 
     <div id="donation-modal">
         <h2 style="color:#ff00ff; margin:0 0 10px 0;">COMMUNITY HUB</h2>
-        <a class="tip-link yt-link" href="https://www.youtube.com/@treavorbutts" target="_blank">▶ SUBSCRIBE TO TREAVOR BUTTS</a>
-        <p style="font-size: 10px; color: #888; margin-bottom: 15px;">Support the local creator!</p>
+        <a class="tip-link yt-link" href="https://www.youtube.com/@SancoOutdoors" target="_blank">🎬 SUBSCRIBE TO SANCO OUTDOORS</a>
+        <p style="font-size: 10px; color: #ccc; margin-bottom: 20px;">Support Treavor Butts' Content!</p>
         
         <a class="tip-link" href="https://www.sanangelogives.org/organization/emmanuelschooloffinearts" target="_blank">🎻 Tip Main ESOFA Fund</a>
         <a class="tip-link" href="#" target="_blank">🎹 Tip Piano Program</a>
-        <div style="margin-top:15px; color:#666; cursor:pointer;" onclick="toggleModal(false)">[ BACK TO PERFORMANCE ]</div>
+        <div style="margin-top:15px; color:#666; cursor:pointer; font-size: 12px;" onclick="toggleModal(false)">[ BACK TO GAME ]</div>
     </div>
 
     <button id="tip-menu-btn" class="btn" onclick="toggleModal(true)">💝 SUPPORT HUB</button>
@@ -69,16 +68,16 @@
     });
 
     const ORBS = [
-        { r: 22, icon: '🎵', pts: 10, color: '#00ffff' },
-        { r: 32, icon: '🪈', pts: 20, color: '#ff00ff' },
-        { r: 42, icon: '🎺', pts: 40, color: '#ffff00' },
-        { r: 52, icon: '🎷', pts: 80, color: '#00ff00' },
-        { r: 65, icon: '🎻', pts: 150, color: '#ff4500' },
-        { r: 80, icon: '🎸', pts: 300, color: '#1e90ff' },
-        { r: 95, icon: '🥁', pts: 600, color: '#9400d3' }
+        { r: 25, icon: '🎵', pts: 10, color: '#00ffff' },
+        { r: 35, icon: '🪈', pts: 20, color: '#ff00ff' },
+        { r: 45, icon: '🎺', pts: 40, color: '#ffff00' },
+        { r: 55, icon: '🎷', pts: 80, color: '#00ff00' },
+        { r: 70, icon: '🎻', pts: 150, color: '#ff4500' },
+        { r: 85, icon: '🎸', pts: 300, color: '#1e90ff' },
+        { r: 100, icon: '🥁', pts: 600, color: '#9400d3' }
     ];
 
-    const ground = Bodies.rectangle(width/2, height+25, width, 60, { isStatic: true, render: { fillStyle: '#333' } });
+    const ground = Bodies.rectangle(width/2, height+25, width, 60, { isStatic: true, render: { fillStyle: '#111' } });
     const wallL = Bodies.rectangle(-25, height/2, 50, height, { isStatic: true });
     const wallR = Bodies.rectangle(width+25, height/2, 50, height, { isStatic: true });
     Composite.add(engine.world, [ground, wallL, wallR]);
@@ -93,17 +92,24 @@
     function dropOrb() {
         if(!canDrop || modalOpen) return;
         canDrop = false;
-        const orb = Bodies.circle(mouseX, 50, ORBS[currentIdx].r, {
+        
+        const orb = Bodies.circle(mouseX, 60, ORBS[currentIdx].r, {
             label: 'orb_' + currentIdx,
+            restitution: 0.3,
             render: { fillStyle: 'transparent' }
         });
+        
         Composite.add(engine.world, orb);
+        
+        // Cycle next orbs
         currentIdx = nextIdx;
         nextIdx = Math.floor(Math.random() * 3);
         document.getElementById('next-icon').innerText = ORBS[nextIdx].icon;
-        setTimeout(() => canDrop = true, 600);
+        
+        setTimeout(() => { canDrop = true; }, 600);
     }
 
+    // Controls
     window.addEventListener('keydown', (e) => { if (e.code === 'Space') dropOrb(); });
     render.canvas.addEventListener('mousemove', (e) => {
         const rect = render.canvas.getBoundingClientRect();
@@ -132,24 +138,23 @@
 
     Events.on(render, 'afterRender', () => {
         const ctx = render.context;
-        // GHOST PREVIEW FIX
+        // GHOST
         if(canDrop && !modalOpen) {
             ctx.save();
-            ctx.globalAlpha = 0.5; // Made it brighter
+            ctx.globalAlpha = 0.4;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.font = `${ORBS[currentIdx].r * 1.5}px serif`;
-            ctx.fillText(ORBS[currentIdx].icon, mouseX, 50);
-            ctx.strokeStyle = ORBS[currentIdx].color;
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(mouseX, 50, ORBS[currentIdx].r, 0, Math.PI*2);
-            ctx.stroke();
+            ctx.font = `${ORBS[currentIdx].r * 1.2}px serif`;
+            ctx.fillText(ORBS[currentIdx].icon, mouseX, 60);
+            ctx.strokeStyle = "#00ffff";
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(mouseX, 60, ORBS[currentIdx].r, 0, Math.PI*2); ctx.stroke();
             ctx.restore();
         }
 
+        // PHYSICAL BODIES
         engine.world.bodies.forEach(body => {
-            if(body.label.includes('orb_')) {
+            if(body.label && body.label.includes('orb_')) {
                 const idx = parseInt(body.label.split('_')[1]);
                 const info = ORBS[idx];
                 ctx.save();
@@ -157,7 +162,7 @@
                 ctx.rotate(body.angle);
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
-                ctx.font = `${info.r * 1.5}px serif`;
+                ctx.font = `${info.r * 1.2}px serif`;
                 ctx.fillText(info.icon, 0, 0);
                 ctx.restore();
             }
