@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ESOFA Harmony Drop: V1.5 Spotlight</title>
+    <title>ESOFA Harmony Drop: V1.6 Space Control</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #050508; overflow: hidden; font-family: 'Courier New', monospace; color: #00ffff; }
@@ -26,6 +26,8 @@
         
         canvas { border: 3px solid #00ffff; border-radius: 10px; background: radial-gradient(circle, #0e0e1a 0%, #050508 100%); cursor: crosshair; }
         
+        #controls-hint { position: absolute; bottom: 80px; width: 100%; text-align: center; color: rgba(0, 255, 255, 0.4); font-size: 12px; }
+
         #game-over-screen { position: absolute; display: none; flex-direction: column; align-items: center; background: rgba(0,0,0,0.95); padding: 40px; border: 3px solid #fff; border-radius: 15px; z-index: 500; }
         @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1.5px, -1px) rotate(-1deg); } 100% { transform: translate(1px, -1px) rotate(0deg); } }
     </style>
@@ -45,6 +47,8 @@
         <div style="font-size: 10px;">UPCOMING</div>
         <div id="next-icon">🪈</div>
     </div>
+
+    <div id="controls-hint">MOVE MOUSE TO AIM • CLICK OR SPACE TO DROP</div>
 
     <button id="shake-btn" class="btn" onclick="shakeStage()">⚡ SHAKE STAGE</button>
     <a id="donate-btn" class="btn" href="https://www.sanangelogives.org/organization/emmanuelschooloffinearts" target="_blank">💝 TIP ESOFA</a>
@@ -98,10 +102,13 @@
     Composite.add(engine.world, [ground, wallL, wallR]);
 
     let score = 0, currentIdx = 0, nextIdx = Math.floor(Math.random()*3), canDrop = true, mouseX = width/2;
-    let particles = [], combo = 0, comboTimer = null;
+    let combo = 0, comboTimer = null;
 
     function dropOrb() {
         if(!canDrop) return;
+        // Don't drop if game over screen is open
+        if(document.getElementById('game-over-screen').style.display === 'flex') return;
+
         canDrop = false;
         const orb = Bodies.circle(mouseX, 50, ORBS[currentIdx].r, {
             restitution: 0.4, label: 'orb_' + currentIdx, render: { fillStyle: 'transparent' }
@@ -123,6 +130,17 @@
             if(!b.isStatic) Body.applyForce(b, b.position, { x: (Math.random()-0.5)*0.25, y: -Math.random()*0.35 });
         });
     }
+
+    // --- KEYBOARD & MOUSE CONTROLS ---
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+            // Prevent the page from scrolling down when pressing space
+            if (document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                dropOrb();
+            }
+        }
+    });
 
     render.canvas.addEventListener('mousemove', (e) => {
         const rect = render.canvas.getBoundingClientRect();
@@ -163,8 +181,7 @@
 
     Events.on(render, 'afterRender', () => {
         const ctx = render.context;
-        // Draw Ghost Guide
-        if(canDrop) {
+        if(canDrop && document.getElementById('game-over-screen').style.display !== 'flex') {
             ctx.save(); ctx.globalAlpha = 0.3;
             ctx.beginPath(); ctx.arc(mouseX, 50, ORBS[currentIdx].r, 0, Math.PI*2);
             ctx.strokeStyle = ORBS[currentIdx].color; ctx.stroke();
