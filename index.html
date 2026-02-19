@@ -3,38 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ESOFA Harmony Drop: V1.7 Hub Edition</title>
+    <title>ESOFA Harmony Drop: V1.9</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #050508; overflow: hidden; font-family: 'Courier New', monospace; color: #00ffff; }
-        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        
-        .panel { position: absolute; background: rgba(0, 255, 255, 0.05); border: 2px solid #00ffff; border-radius: 10px; padding: 15px; box-shadow: 0 0 20px rgba(0, 255, 255, 0.1); pointer-events: none; z-index: 10; }
+        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .panel { position: absolute; background: rgba(0, 255, 255, 0.05); border: 2px solid #00ffff; border-radius: 10px; padding: 15px; pointer-events: none; z-index: 10; }
         #stats { top: 20px; left: 20px; width: 140px; text-align: center; }
-        #score { font-size: 42px; font-weight: bold; color: #fff; text-shadow: 0 0 15px #00ffff; }
-        #next-preview { bottom: 20px; left: 20px; width: 100px; text-align: center; border-color: #ff00ff; box-shadow: 0 0 15px #ff00ff; }
-        #next-icon { font-size: 45px; margin-top: 5px; }
-
-        /* Donation Hub Modal */
+        #score { font-size: 42px; font-weight: bold; color: #fff; }
+        #next-preview { bottom: 20px; left: 20px; width: 100px; text-align: center; border-color: #ff00ff; }
+        
+        /* Modal Style */
         #donation-modal {
             position: absolute; display: none; flex-direction: column; align-items: center;
             background: rgba(0,0,0,0.95); padding: 30px; border: 3px solid #ff00ff; border-radius: 15px;
-            z-index: 1000; width: 300px; box-shadow: 0 0 50px rgba(255, 0, 255, 0.5);
+            z-index: 1000; width: 320px;
         }
         .tip-link {
-            width: 100%; padding: 12px; margin: 8px 0; background: transparent; 
+            width: 100%; padding: 12px; margin: 5px 0; background: transparent; 
             border: 1px solid #00ffff; color: #00ffff; text-decoration: none; 
-            text-align: center; font-weight: bold; border-radius: 5px; transition: 0.2s;
+            text-align: center; font-weight: bold; border-radius: 5px; font-size: 13px;
         }
-        .tip-link:hover { background: #00ffff; color: #000; transform: scale(1.05); }
-        .close-btn { margin-top: 15px; color: #888; cursor: pointer; text-decoration: underline; font-size: 12px; }
-
-        .btn { position: absolute; cursor: pointer; background: #fff; color: #000; padding: 12px 20px; border: none; font-weight: bold; font-family: inherit; z-index: 100; transition: 0.2s; border-radius: 5px; box-shadow: 0 0 10px #fff; }
-        #tip-menu-btn { bottom: 20px; right: 20px; font-size: 18px; background: #ff00ff; color: #fff; box-shadow: 0 0 15px #ff00ff; }
-        #shake-btn { bottom: 20px; left: 160px; }
+        .yt-link { border-color: #ff0000; color: #ff0000; background: rgba(255,0,0,0.1); }
         
-        canvas { border: 3px solid #00ffff; border-radius: 10px; background: radial-gradient(circle, #0e0e1a 0%, #050508 100%); cursor: crosshair; }
-        #game-over-screen { position: absolute; display: none; flex-direction: column; align-items: center; background: rgba(0,0,0,0.95); padding: 40px; border: 3px solid #fff; border-radius: 15px; z-index: 500; }
+        .btn { position: absolute; cursor: pointer; background: #fff; color: #000; padding: 12px 20px; border: none; font-weight: bold; border-radius: 5px; z-index: 100; }
+        #tip-menu-btn { bottom: 20px; right: 20px; background: #ff00ff; color: #fff; }
+        canvas { border: 3px solid #00ffff; border-radius: 10px; background: #050508; cursor: crosshair; }
     </style>
 </head>
 <body>
@@ -43,53 +37,30 @@
     <div id="stats" class="panel">
         <div>HYPE SCORE</div>
         <div id="score">0</div>
-        <div id="combo" style="font-size: 14px; color: #ff00ff; visibility: hidden;">COMBO x2</div>
     </div>
 
     <div id="next-preview" class="panel">
         <div style="font-size: 10px;">UPCOMING</div>
-        <div id="next-icon">🪈</div>
+        <div id="next-icon" style="font-size:40px;">🪈</div>
     </div>
 
     <div id="donation-modal">
-        <h2 style="color:#ff00ff; margin-top:0;">SUPPORT THE ARTS</h2>
-        <p style="font-size: 12px; text-align: center; color: #ccc;">Select a recipient to tip directly via their secure page:</p>
+        <h2 style="color:#ff00ff; margin:0 0 10px 0;">COMMUNITY HUB</h2>
+        <a class="tip-link yt-link" href="https://www.youtube.com/@treavorbutts" target="_blank">▶ SUBSCRIBE TO TREAVOR BUTTS</a>
+        <p style="font-size: 10px; color: #888; margin-bottom: 15px;">Support the local creator!</p>
         
         <a class="tip-link" href="https://www.sanangelogives.org/organization/emmanuelschooloffinearts" target="_blank">🎻 Tip Main ESOFA Fund</a>
-        <a class="tip-link" href="LINK_2_HERE" target="_blank">🎹 Tip Piano Program</a>
-        <a class="tip-link" href="LINK_3_HERE" target="_blank">🎺 Tip Brass Section</a>
-        <a class="tip-link" href="LINK_4_HERE" target="_blank">🎷 Tip Woodwinds</a>
-        <a class="tip-link" href="LINK_5_HERE" target="_blank">🎨 Tip Visual Arts</a>
-
-        <div class="close-btn" onclick="toggleModal(false)">RETURN TO GAME</div>
+        <a class="tip-link" href="#" target="_blank">🎹 Tip Piano Program</a>
+        <div style="margin-top:15px; color:#666; cursor:pointer;" onclick="toggleModal(false)">[ BACK TO PERFORMANCE ]</div>
     </div>
 
-    <button id="shake-btn" class="btn" onclick="shakeStage()">⚡ SHAKE</button>
-    <button id="tip-menu-btn" class="btn" onclick="toggleModal(true)">💝 TIP MENU</button>
-
-    <div id="game-over-screen">
-        <h1 style="color:#fff;">CONCERT OVER</h1>
-        <button class="btn" style="position: static; width: 100%;" onclick="location.reload()">PLAY AGAIN</button>
-    </div>
+    <button id="tip-menu-btn" class="btn" onclick="toggleModal(true)">💝 SUPPORT HUB</button>
 </div>
 
 <script>
-    // --- GAME ENGINE SETUP ---
     const { Engine, Render, Runner, Bodies, Composite, Events, Body } = Matter;
     const engine = Engine.create();
     const width = 400, height = 650;
-
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playNote(freq, type='triangle', vol=0.1) {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-    }
 
     const render = Render.create({
         element: document.getElementById('game-container'),
@@ -98,26 +69,22 @@
     });
 
     const ORBS = [
-        { r: 22, icon: '🎵', pts: 10, freq: 261, color: '#00ffff' },
-        { r: 32, icon: '🪈', pts: 20, freq: 293, color: '#ff00ff' },
-        { r: 42, icon: '🎺', pts: 40, freq: 329, color: '#ffff00' },
-        { r: 52, icon: '🎷', pts: 80, freq: 349, color: '#00ff00' },
-        { r: 65, icon: '🎻', pts: 150, freq: 392, color: '#ff4500' },
-        { r: 80, icon: '🎸', pts: 300, freq: 440, color: '#1e90ff' },
-        { r: 95, icon: '🥁', pts: 600, freq: 493, color: '#9400d3' },
-        { r: 115, icon: '🎹', pts: 1200, freq: 523, color: '#ffffff' },
-        { r: 135, icon: '🔱', pts: 2500, freq: 587, color: '#ffd700' }
+        { r: 22, icon: '🎵', pts: 10, color: '#00ffff' },
+        { r: 32, icon: '🪈', pts: 20, color: '#ff00ff' },
+        { r: 42, icon: '🎺', pts: 40, color: '#ffff00' },
+        { r: 52, icon: '🎷', pts: 80, color: '#00ff00' },
+        { r: 65, icon: '🎻', pts: 150, color: '#ff4500' },
+        { r: 80, icon: '🎸', pts: 300, color: '#1e90ff' },
+        { r: 95, icon: '🥁', pts: 600, color: '#9400d3' }
     ];
 
-    const ground = Bodies.rectangle(width/2, height+25, width, 60, { isStatic: true, render: { fillStyle: '#00ffff' } });
+    const ground = Bodies.rectangle(width/2, height+25, width, 60, { isStatic: true, render: { fillStyle: '#333' } });
     const wallL = Bodies.rectangle(-25, height/2, 50, height, { isStatic: true });
     const wallR = Bodies.rectangle(width+25, height/2, 50, height, { isStatic: true });
     Composite.add(engine.world, [ground, wallL, wallR]);
 
-    let score = 0, currentIdx = 0, nextIdx = Math.floor(Math.random()*3), canDrop = true, mouseX = width/2;
-    let combo = 0, comboTimer = null, modalOpen = false;
+    let score = 0, currentIdx = 0, nextIdx = 1, canDrop = true, mouseX = width/2, modalOpen = false;
 
-    // --- HUD LOGIC ---
     function toggleModal(show) {
         modalOpen = show;
         document.getElementById('donation-modal').style.display = show ? 'flex' : 'none';
@@ -127,23 +94,14 @@
         if(!canDrop || modalOpen) return;
         canDrop = false;
         const orb = Bodies.circle(mouseX, 50, ORBS[currentIdx].r, {
-            restitution: 0.4, label: 'orb_' + currentIdx, render: { fillStyle: 'transparent' }
+            label: 'orb_' + currentIdx,
+            render: { fillStyle: 'transparent' }
         });
         Composite.add(engine.world, orb);
-        playNote(ORBS[currentIdx].freq/4, 'sine', 0.1);
         currentIdx = nextIdx;
         nextIdx = Math.floor(Math.random() * 3);
         document.getElementById('next-icon').innerText = ORBS[nextIdx].icon;
-        setTimeout(() => canDrop = true, 500);
-    }
-
-    function shakeStage() {
-        if(score < 50 || modalOpen) return;
-        score -= 50;
-        document.getElementById('score').innerText = score;
-        engine.world.bodies.forEach(b => {
-            if(!b.isStatic) Body.applyForce(b, b.position, { x: (Math.random()-0.5)*0.25, y: -Math.random()*0.35 });
-        });
+        setTimeout(() => canDrop = true, 600);
     }
 
     window.addEventListener('keydown', (e) => { if (e.code === 'Space') dropOrb(); });
@@ -165,17 +123,8 @@
                         label: 'orb_' + (idx+1), render: { fillStyle: 'transparent' }
                     });
                     Composite.add(engine.world, newOrb);
-                    playNote(ORBS[idx+1].freq + (combo * 20));
-                    combo++;
-                    clearTimeout(comboTimer);
-                    comboTimer = setTimeout(() => { combo = 0; document.getElementById('combo').style.visibility = "hidden"; }, 1500);
-                    score += ORBS[idx+1].pts * (combo > 1 ? 2 : 1);
+                    score += ORBS[idx+1].pts;
                     document.getElementById('score').innerText = score;
-                    if(combo > 1) {
-                        const cb = document.getElementById('combo');
-                        cb.innerText = `COMBO x${combo}`;
-                        cb.style.visibility = "visible";
-                    }
                 }
             }
         });
@@ -183,36 +132,37 @@
 
     Events.on(render, 'afterRender', () => {
         const ctx = render.context;
+        // GHOST PREVIEW FIX
         if(canDrop && !modalOpen) {
-            ctx.save(); ctx.globalAlpha = 0.3;
-            ctx.beginPath(); ctx.arc(mouseX, 50, ORBS[currentIdx].r, 0, Math.PI*2);
-            ctx.strokeStyle = ORBS[currentIdx].color; ctx.stroke();
-            ctx.textAlign = "center"; ctx.textBaseline = "middle";
-            ctx.font = `${ORBS[currentIdx].r}px serif`;
+            ctx.save();
+            ctx.globalAlpha = 0.5; // Made it brighter
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.font = `${ORBS[currentIdx].r * 1.5}px serif`;
             ctx.fillText(ORBS[currentIdx].icon, mouseX, 50);
+            ctx.strokeStyle = ORBS[currentIdx].color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(mouseX, 50, ORBS[currentIdx].r, 0, Math.PI*2);
+            ctx.stroke();
             ctx.restore();
         }
+
         engine.world.bodies.forEach(body => {
             if(body.label.includes('orb_')) {
                 const idx = parseInt(body.label.split('_')[1]);
                 const info = ORBS[idx];
-                ctx.save(); ctx.translate(body.position.x, body.position.y); ctx.rotate(body.angle);
-                ctx.shadowBlur = 10; ctx.shadowColor = info.color;
-                ctx.beginPath(); ctx.arc(0, 0, info.r, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(0,0,0,0.8)'; ctx.strokeStyle = info.color; ctx.lineWidth = 2;
-                ctx.fill(); ctx.stroke();
-                ctx.shadowBlur = 0; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-                ctx.font = `${info.r}px serif`; ctx.fillText(info.icon, 0, 0);
+                ctx.save();
+                ctx.translate(body.position.x, body.position.y);
+                ctx.rotate(body.angle);
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.font = `${info.r * 1.5}px serif`;
+                ctx.fillText(info.icon, 0, 0);
                 ctx.restore();
             }
         });
     });
-
-    setInterval(() => {
-        let count = 0;
-        engine.world.bodies.forEach(b => { if(b.position.y < 120 && !b.isStatic && b.id > 10) count++; });
-        if(count >= 10) document.getElementById('game-over-screen').style.display = 'flex';
-    }, 1000);
 
     Render.run(render);
     Runner.run(Runner.create(), engine);
