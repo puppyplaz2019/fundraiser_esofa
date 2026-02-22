@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ESOFA Harmony: V1.13 Fixed</title>
+    <title>ESOFA Harmony: Sanco Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #1a1a1a; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: #fdf5e6; }
@@ -14,13 +14,16 @@
         #next-preview { bottom: 20px; left: 20px; text-align: center; }
         #next-icon { font-size: 40px; display: block; margin-top: 5px; }
 
+        /* Unified Support Menu */
         #donation-modal {
             position: absolute; display: none; flex-direction: column; align-items: center;
             background: #252525; padding: 30px; border: 2px solid #d4af37; border-radius: 8px;
             z-index: 1000; width: 340px; text-align: center; box-shadow: 0 0 40px rgba(0,0,0,0.8);
         }
-        .hub-link { width: 100%; padding: 14px; margin: 8px 0; font-weight: bold; text-decoration: none; border-radius: 4px; display: block; }
-        .yt-btn { background: #c4302b; color: white; }
+        .hub-link { width: 100%; padding: 14px; margin: 8px 0; font-weight: bold; text-decoration: none; border-radius: 4px; display: block; transition: 0.2s; }
+        .hub-link:hover { transform: scale(1.02); }
+        
+        .yt-btn { background: #ff0000; color: white; border: 1px solid white; }
         .tip-btn { background: #d4af37; color: #1a1a1a; }
 
         .btn { position: absolute; cursor: pointer; padding: 12px 24px; border: none; font-weight: bold; border-radius: 4px; z-index: 100; background: #d4af37; color: #1a1a1a; }
@@ -42,13 +45,15 @@
     </div>
 
     <div id="donation-modal">
-        <h3 style="color:#d4af37; margin-top:0;">COMMUNITY HUB</h3>
-        <a class="hub-link yt-btn" href="https://www.youtube.com/@SancoOutdoors" target="_blank">SUBSCRIBE TO SANCO OUTDOORS</a>
-        <a class="hub-link tip-btn" href="https://www.sanangelogives.org/organization/emmanuelschooloffinearts" target="_blank">TIP THE SCHOOL</a>
-        <div style="margin-top:20px; color:#888; cursor:pointer;" onclick="toggleModal(false)">[ RETURN ]</div>
+        <h3 style="color:#d4af37; margin-top:0; letter-spacing: 2px;">COMMUNITY HUB</h3>
+        
+        <a class="hub-link yt-btn" href="https://www.youtube.com/@SancoOutdoors" target="_blank">🎬 SUB TO SANCO OUTDOORS</a>
+        <a class="hub-link tip-btn" href="https://www.sanangelogives.org/organization/emmanuelschooloffinearts" target="_blank">🎻 TIP THE SCHOOL</a>
+        
+        <div style="margin-top:20px; color:#888; cursor:pointer; font-size: 12px;" onclick="toggleModal(false)">[ RETURN TO GAME ]</div>
     </div>
 
-    <button id="menu-trigger" class="btn" onclick="toggleModal(true)">Support Hub</button>
+    <button id="menu-trigger" class="btn" onclick="toggleModal(true)">SUPPORT HUB</button>
 </div>
 
 <script>
@@ -75,10 +80,7 @@
     const rightWall = Bodies.rectangle(410, 300, 20, 600, { isStatic: true });
     Composite.add(engine.world, [ground, leftWall, rightWall]);
 
-    // HAND LOGIC FIXED
     let score = 0, currentIdx = 0, nextIdx = Math.floor(Math.random() * 3), canDrop = true, mouseX = 200, modalOpen = false;
-
-    // Initialize the preview icon immediately
     document.getElementById('next-icon').innerText = ORBS[nextIdx].icon;
 
     function toggleModal(show) { 
@@ -89,21 +91,14 @@
     function drop() {
         if(!canDrop || modalOpen) return;
         canDrop = false;
-        
-        // 1. Drop CURRENT
         const ball = Bodies.circle(mouseX, 50, ORBS[currentIdx].r, {
             restitution: 0.4,
             plugin: { icon: ORBS[currentIdx].icon, r: ORBS[currentIdx].r, idx: currentIdx, color: ORBS[currentIdx].color }
         });
         Composite.add(engine.world, ball);
-        
-        // 2. Take NEXT from preview and put in HAND
         currentIdx = nextIdx;
-        
-        // 3. Roll NEW preview
         nextIdx = Math.floor(Math.random() * 3);
         document.getElementById('next-icon').innerText = ORBS[nextIdx].icon;
-        
         setTimeout(() => { canDrop = true; }, 500);
     }
 
